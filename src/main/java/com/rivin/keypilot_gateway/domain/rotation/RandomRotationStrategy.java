@@ -1,21 +1,19 @@
 package com.rivin.keypilot_gateway.domain.rotation;
 
-
 import com.rivin.keypilot_gateway.domain.model.ApiKey;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Random;
 
-@Component("roundRobin")
-public class RoundRobinRotationStrategy extends BaseKeyRotationStrategy {
+@Component("random")
+public class RandomRotationStrategy extends BaseKeyRotationStrategy {
 
-    private final AtomicInteger counter = new AtomicInteger(0);
+    private final Random random = new Random();
 
     @Override
     public ApiKey selectKey(List<ApiKey> availableKeys) {
         List<ApiKey> activeKeys = getActiveKeys(availableKeys);
-        int index = counter.getAndIncrement() % activeKeys.size();
-        return activeKeys.get(index);
+        return activeKeys.get(random.nextInt(activeKeys.size()));
     }
 }

@@ -20,7 +20,7 @@ public class ApiKeyTest {
 
     @Test
     void shouldRejectIfTheKeyIsNull(){
-        InvalidApiException exception = assertThrows(InvalidApiException.class, () -> new ApiKey(null, "https://test.com"));
+        InvalidApiException exception = assertThrows(InvalidApiException.class, () -> new ApiKey(null, "openai"));
         assertEquals("API key cannot be null or blank", exception.getMessage());
     }
 
@@ -66,6 +66,8 @@ public class ApiKeyTest {
         assertEquals("API key has been already deactivated!", newKey.deactivate());
     }
 
+
+    ////////////////////////////////// ID Check //////////////////////////////////////
     @Test
     void shouldHaveUniqueIds() {
         ApiKey key1 = new ApiKey("openai", "sk-test-1");
