@@ -13,17 +13,20 @@ public class KeyRotationService {
 
     private final ApiKeyRepository apiKeyRepository;
     private final KeyRotationStrategy keyRotationStrategy;
+    private final RateLimiterService rateLimiterService;
 
     public KeyRotationService(
             ApiKeyRepository apiKeyRepository,
-            @Qualifier("roundRobin") KeyRotationStrategy keyRotationStrategy
-    ) {
+            @Qualifier("roundRobin") KeyRotationStrategy keyRotationStrategy,
+            RateLimiterService rateLimiterService
+            ) {
         this.apiKeyRepository = apiKeyRepository;
         this.keyRotationStrategy = keyRotationStrategy;
+        this.rateLimiterService = rateLimiterService;
     }
 
     public ApiKey getNextKey(String provider) {
-        List<ApiKey> keys = apiKeyRepository.findAllByProvider(provider);
+        List<ApiKey> keys = rateLimiterService.getAvailableKeys(provider);
         return keyRotationStrategy.selectKey(keys)
                 ;
     }

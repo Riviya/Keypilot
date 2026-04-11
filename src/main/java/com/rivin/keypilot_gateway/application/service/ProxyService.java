@@ -17,21 +17,21 @@ public class ProxyService {
 
     private final KeyRotationService keyRotationService;
     private final ProviderGateway providerGateway;
+    private final RateLimiterService rateLimiterService;
 
-    public ProxyService(KeyRotationService keyRotationService, ProviderGateway providerGateway) {
+    public ProxyService(KeyRotationService keyRotationService, ProviderGateway providerGateway, RateLimiterService rateLimiterService) {
         this.keyRotationService = keyRotationService;
         this.providerGateway = providerGateway;
+        this.rateLimiterService = rateLimiterService;
     }
 
-    public ResponseEntity<String> forward(String provider, HttpServletRequest request, String body) {
+    public ResponseEntity<String> forward(String provider,
+                                          HttpServletRequest request,
+                                          String body) {
 
-        // 1. Get the correct API key
         ApiKey selectedKey = keyRotationService.getNextKey(provider);
-
-        // 2. Extract the header details in the request (Without Authorization)
         Map<String, String> headers = extractHeaders(request);
 
-        // Create a new proxy request so that we can transfer extracted data
         ProxyRequest proxyRequest = new ProxyRequest(
                 provider,
                 request.getRequestURI(),
@@ -41,7 +41,19 @@ public class ProxyService {
                 body
         );
 
-        return providerGateway.forward(proxyRequest);
+        try {
+            // Forward request
+            ResponseEntity<String> response = providerGateway.forward(proxyRequest);
+
+            // ✅ Record usage ONLY if request reached provider (no exception)
+            rateLimiterService.recordUsage(selectedKey.getId());
+
+            return response;
+
+        } catch (Exception ex) {
+            // ❌ Do NOT record usage if request failed to reach provider
+            throw ex;
+        }
     }
 
 

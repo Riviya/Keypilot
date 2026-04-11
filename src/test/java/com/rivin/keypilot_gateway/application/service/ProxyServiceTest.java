@@ -1,5 +1,6 @@
 package com.rivin.keypilot_gateway.application.service;
 
+import com.rivin.keypilot_gateway.domain.exception.ProviderCommunicationException;
 import com.rivin.keypilot_gateway.domain.model.ApiKey;
 import com.rivin.keypilot_gateway.domain.proxy.ProviderGateway;
 import com.rivin.keypilot_gateway.domain.proxy.ProxyRequest;
@@ -32,11 +33,14 @@ class ProxyServiceTest {
     @Mock
     private HttpServletRequest httpServletRequest;
 
+    @Mock
+    private RateLimiterService rateLimiterService;
+
     private ProxyService proxyService;
 
     @BeforeEach
     void setUp() {
-        proxyService = new ProxyService(keyRotationService, providerGateway);
+        proxyService = new ProxyService(keyRotationService, providerGateway, rateLimiterService);
     }
 
     // ---------------------------------------------------------------
@@ -143,31 +147,6 @@ class ProxyServiceTest {
         // Gateway must never be called
         verify(providerGateway, never()).forward(any());
     }
-//
-//    @Test
-//    void shouldNotForwardAuthorizationHeaderFromIncomingRequest() {
-//        // Security: caller's own Authorization header must be stripped
-//        // and replaced with the gateway-selected key
-//        ApiKey selectedKey = new ApiKey("sk-gateway-key", "openai");
-//        when(keyRotationService.getNextKey("openai")).thenReturn(selectedKey);
-//        when(httpServletRequest.getRequestURI()).thenReturn("/v1/chat/completions");
-//        when(httpServletRequest.getMethod()).thenReturn("POST");
-//
-//        // Simulate incoming request that has its own Authorization header
-//        when(httpServletRequest.getHeaderNames())
-//                .thenReturn(Collections.enumeration(java.util.List.of("Authorization", "Content-Type")));
-//        when(httpServletRequest.getHeader("Authorization")).thenReturn("Bearer sk-caller-own-key");
-//        when(httpServletRequest.getHeader("Content-Type")).thenReturn("application/json");
-//
-//        when(providerGateway.forward(any())).thenReturn(ResponseEntity.ok("{}"));
-//
-//        proxyService.forward("openai", httpServletRequest, "{}");
-//
-//        verify(providerGateway).forward(argThat(proxyRequest ->
-//                proxyRequest.apiKey().equals("sk-gateway-key") &&
-//                        !proxyRequest.headers().containsKey("Authorization")
-//        ));
-//    }
 
     @Test
     void shouldNotForwardAuthorizationHeaderFromIncomingRequest() {
@@ -196,4 +175,61 @@ class ProxyServiceTest {
         ));
     }
 
+    ////////////////////////////////// Usage Recording Check //////////////////////////////////////
+    @Test
+    void shouldRecordKeyUsageAfterSuccessfulForward() {
+
+        // Arrange
+        ApiKey selectedKey = new ApiKey("sk-test", "openai", 10, 40);
+
+        when(keyRotationService.getNextKey("openai")).thenReturn(selectedKey);
+        when(httpServletRequest.getRequestURI()).thenReturn("/v1/chat/completions");
+        when(httpServletRequest.getMethod()).thenReturn("POST");
+        when(httpServletRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
+        when(providerGateway.forward(any(ProxyRequest.class)))
+                .thenReturn(ResponseEntity.ok("{}"));
+
+        proxyService.forward("openai", httpServletRequest, "{}");
+        verify(rateLimiterService, times(1)).recordUsage(selectedKey.getId());
+
+    }
+
+    @Test
+    void shouldNotRecordUsageWhenProviderCallFails() {
+        ApiKey selectedKey = new ApiKey("sk-test", "openai", 10, 60);
+        when(keyRotationService.getNextKey("openai")).thenReturn(selectedKey);
+        when(httpServletRequest.getRequestURI()).thenReturn("/v1/chat/completions");
+        when(httpServletRequest.getMethod()).thenReturn("POST");
+        when(httpServletRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
+        when(providerGateway.forward(any()))
+                .thenThrow(new ProviderCommunicationException("OpenAI down"));
+
+        assertThatThrownBy(() -> proxyService.forward("openai", httpServletRequest, "{}"))
+                .isInstanceOf(ProviderCommunicationException.class);
+
+        verify(rateLimiterService, never()).recordUsage(any());
+    }
+
+    @Test
+    void shouldRecordUsageWhenProviderReturnsErrorResponse() {
+        // Arrange
+        ApiKey selectedKey = new ApiKey("sk-test", "openai", 10, 60);
+
+        when(keyRotationService.getNextKey("openai")).thenReturn(selectedKey);
+        when(httpServletRequest.getRequestURI()).thenReturn("/v1/chat/completions");
+        when(httpServletRequest.getMethod()).thenReturn("POST");
+        when(httpServletRequest.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
+
+        when(providerGateway.forward(any()))
+                .thenReturn(ResponseEntity.status(500).body("error"));
+
+        // Act
+        proxyService.forward("openai", httpServletRequest, "{}");
+
+        // Should STILL record usage
+        verify(rateLimiterService).recordUsage(selectedKey.getId());
+    }
+
 }
+
+

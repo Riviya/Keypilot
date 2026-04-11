@@ -24,11 +24,14 @@ class KeyRotationServiceTest {
     @Mock
     private KeyRotationStrategy keyRotationStrategy;
 
+    @Mock
+    private RateLimiterService rateLimiterService;
+
     private KeyRotationService keyRotationService;
 
     @BeforeEach
     void setUp() {
-        keyRotationService = new KeyRotationService(apiKeyRepository, keyRotationStrategy);
+        keyRotationService = new KeyRotationService(apiKeyRepository, keyRotationStrategy,  rateLimiterService);
     }
 
     @Test
@@ -72,5 +75,22 @@ class KeyRotationServiceTest {
         keyRotationService.getNextKey(provider);
 
         verify(keyRotationStrategy, times(1)).selectKey(any());
+    }
+
+    @Test
+    void shouldOnlyPassAvailableKeysToRotationStrategy() {
+        String provider = "openai";
+        ApiKey availableKey = new ApiKey("sk-available", provider, 10, 60);
+        List<ApiKey> availableKeys = List.of(availableKey);
+
+        when(rateLimiterService.getAvailableKeys(provider)).thenReturn(availableKeys);
+        when(keyRotationStrategy.selectKey(availableKeys)).thenReturn(availableKey);
+
+        ApiKey result = keyRotationService.getNextKey(provider);
+
+        assertThat(result).isEqualTo(availableKey);
+        verify(rateLimiterService).getAvailableKeys(provider);
+        // Repository.findAllByProvider should no longer be called directly
+        verify(apiKeyRepository, never()).findAllByProvider(any());
     }
 }
