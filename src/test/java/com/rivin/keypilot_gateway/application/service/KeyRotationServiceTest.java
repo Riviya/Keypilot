@@ -37,24 +37,26 @@ class KeyRotationServiceTest {
     @Test
     void shouldFetchKeysByProviderAndDelegateToStrategy() {
         String provider = "openai";
-        ApiKey key1 = new ApiKey("sk-1", "provider");
-        ApiKey key2 = new ApiKey("sk-2", "provider");
+        ApiKey key1 = new ApiKey("sk-1", "openai");
+        ApiKey key2 = new ApiKey("sk-2", "openai");
         List<ApiKey> keys = List.of(key1, key2);
 
-        when(apiKeyRepository.findAllByProvider(provider)).thenReturn(keys);
+
+        when(rateLimiterService.getAvailableKeys(provider)).thenReturn(keys);
         when(keyRotationStrategy.selectKey(keys)).thenReturn(key1);
 
         ApiKey selected = keyRotationService.getNextKey(provider);
 
         assertThat(selected).isEqualTo(key1);
-        verify(apiKeyRepository).findAllByProvider(provider);
+        verify(rateLimiterService).getAvailableKeys(provider);
         verify(keyRotationStrategy).selectKey(keys);
     }
 
     @Test
     void shouldPropagateExceptionWhenNoKeysAvailable() {
         String provider = "openai";
-        when(apiKeyRepository.findAllByProvider(provider)).thenReturn(List.of());
+        when(rateLimiterService.getAvailableKeys(provider)).thenReturn(List.of());
+
         when(keyRotationStrategy.selectKey(List.of()))
                 .thenThrow(new NoAvailableApiKeyException("No active API keys available"));
 
@@ -69,7 +71,8 @@ class KeyRotationServiceTest {
         String provider = "anthropic";
         ApiKey key = new ApiKey(provider, "sk-anth-1");
 
-        when(apiKeyRepository.findAllByProvider(provider)).thenReturn(List.of(key));
+        when(rateLimiterService.getAvailableKeys(provider)).thenReturn(List.of(key));
+
         when(keyRotationStrategy.selectKey(any())).thenReturn(key);
 
         keyRotationService.getNextKey(provider);
