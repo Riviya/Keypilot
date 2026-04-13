@@ -23,28 +23,21 @@ public class ApiKey {
 
     // Default Constructor
     public ApiKey(String keyValue, String provider) {
+
+        validate(keyValue, provider);
+
         this.id = UUID.randomUUID().toString();
         this.provider = provider;
         this.keyValue = keyValue;
         this.active = true;
         this.maxRequestsPerWindow = Integer.MAX_VALUE;
         this.windowDurationSeconds = 60;
+
     }
 
     public ApiKey(String keyValue, String provider, int maxRequestsPerWindow, long windowDurationSeconds) {
 
-        if(keyValue == null || keyValue.isBlank()){
-            throw new InvalidApiException("API key cannot be null or blank");
-        }
-        else if(keyValue.contains(" ")){
-            throw new InvalidApiException("API key cannot be contains spaces");
-        }
-        else if(provider == null || provider.isBlank()){
-            throw new InvalidApiProviderException("API key provider cannot be null or blank");
-        }
-        else if(provider.contains(" ")){
-            throw new InvalidApiProviderException("API key provider cannot contains spaces");
-        }
+        validate(keyValue, provider);
 
         this.id = UUID.randomUUID().toString();
         this.provider = provider;
@@ -54,11 +47,27 @@ public class ApiKey {
         this.windowDurationSeconds = windowDurationSeconds;
     }
 
+    public ApiKey(String id, String provider, String keyValue,
+                  boolean active, int maxRequestsPerWindow,
+                  long windowDurationSeconds) {
+
+        validate(keyValue, provider);
+
+        this.id = id;
+        this.provider = provider;
+        this.keyValue = keyValue;
+        this.active = active;
+        this.maxRequestsPerWindow = maxRequestsPerWindow;
+        this.windowDurationSeconds = windowDurationSeconds;
+    }
+
 
     public String getId() { return id; }
     public String getKeyValue() { return keyValue; }
     public String getProvider() { return provider; }
     public boolean isActive() { return active; }
+    public int getMaxRequestsPerWindow()   { return maxRequestsPerWindow; }
+    public long getWindowDurationSeconds() { return windowDurationSeconds; }
 
     public boolean isRateLimited() {
         resetWindowIfExpired();
@@ -98,6 +107,21 @@ public class ApiKey {
         }
         this.active = false;
         return "API Key Deactivated!";
+    }
+
+    private void validate(String keyValue, String provider) {
+        if (keyValue == null || keyValue.isBlank()) {
+            throw new InvalidApiException("API key cannot be null or blank");
+        }
+        if (keyValue.contains(" ")) {
+            throw new InvalidApiException("API key cannot contain spaces");
+        }
+        if (provider == null || provider.isBlank()) {
+            throw new InvalidApiProviderException("Provider cannot be null or blank");
+        }
+        if (provider.contains(" ")) {
+            throw new InvalidApiProviderException("Provider cannot contain spaces");
+        }
     }
 
     // Thread safety
