@@ -31,3 +31,14 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+### Go CLI ###
+/cli/bin/
+/cli/dist/
+/cli/*.exe
+/cli/*.exe~
+/cli/*.test
+/cli/*.out
+/cli/__debug_bin
+/cli/vendor/

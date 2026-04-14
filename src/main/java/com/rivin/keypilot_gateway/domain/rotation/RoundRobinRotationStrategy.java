@@ -2,22 +2,20 @@ package com.rivin.keypilot_gateway.domain.rotation;
 
 
 import com.rivin.keypilot_gateway.domain.model.ApiKey;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class RoundRobinRotationStrategy implements RotationStrategy {
+@Component("roundRobin")
+public class RoundRobinRotationStrategy extends BaseKeyRotationStrategy {
 
-    private final AtomicInteger currentIndex = new AtomicInteger(0);
+    private final AtomicInteger counter = new AtomicInteger(0);
 
     @Override
-    public ApiKey nextKey(List<ApiKey> keys) {
-
-        if (keys == null || keys.isEmpty()) {
-            throw new IllegalArgumentException("No API keys available for rotation");
-        }
-
-        int index = currentIndex.getAndUpdate(i -> (i + 1) % keys.size());
-        return keys.get(index);
+    public ApiKey selectKey(List<ApiKey> availableKeys) {
+        List<ApiKey> activeKeys = getActiveKeys(availableKeys);
+        int index = counter.getAndIncrement() % activeKeys.size();
+        return activeKeys.get(index);
     }
 }

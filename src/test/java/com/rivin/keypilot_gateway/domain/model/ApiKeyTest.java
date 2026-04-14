@@ -20,14 +20,14 @@ public class ApiKeyTest {
 
     @Test
     void shouldRejectIfTheKeyIsNull(){
-        InvalidApiException exception = assertThrows(InvalidApiException.class, () -> new ApiKey(null, "https://test.com"));
+        InvalidApiException exception = assertThrows(InvalidApiException.class, () -> new ApiKey(null, "openai"));
         assertEquals("API key cannot be null or blank", exception.getMessage());
     }
 
     @Test
     void shouldRejectIfTheKeyIsBlank(){
         InvalidApiException exception = assertThrows(InvalidApiException.class, () -> new ApiKey("csd sdhs",  "https://test.com"));
-        assertEquals("API key cannot be contains spaces", exception.getMessage());
+        assertEquals("API key cannot contain spaces", exception.getMessage());
     }
 
 
@@ -41,13 +41,13 @@ public class ApiKeyTest {
     @Test
     void shouldRejectIfTheProviderIsNull(){
         InvalidApiProviderException exception = assertThrows(InvalidApiProviderException.class, () -> new ApiKey("kjebwkf-ejfnkwjbf", null));
-        assertEquals("API key provider cannot be null or blank", exception.getMessage());
+        assertEquals("Provider cannot be null or blank", exception.getMessage());
     }
 
     @Test
     void shouldRejectIfTheProviderIsBlank(){
-        InvalidApiProviderException exception = assertThrows(InvalidApiProviderException.class, () -> new ApiKey("kjebwkf-ejfnkwjbf",  " https://test.com"));
-        assertEquals("API key provider cannot contains spaces", exception.getMessage());
+        InvalidApiProviderException exception = assertThrows(InvalidApiProviderException.class, () -> new ApiKey("kjebwkf-ejfnkwjbf",  "openai provier"));
+        assertEquals("Provider cannot contain spaces", exception.getMessage());
 
     }
 
@@ -66,6 +66,8 @@ public class ApiKeyTest {
         assertEquals("API key has been already deactivated!", newKey.deactivate());
     }
 
+
+    ////////////////////////////////// ID Check //////////////////////////////////////
     @Test
     void shouldHaveUniqueIds() {
         ApiKey key1 = new ApiKey("openai", "sk-test-1");

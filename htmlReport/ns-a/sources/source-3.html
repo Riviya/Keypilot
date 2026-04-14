@@ -1,0 +1,133 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ProxyController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.rivin.keypilot_gateway.presentation.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: ProxyController (com.rivin.keypilot_gateway.presentation.controller)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ProxyController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.rivin.keypilot_gateway.presentation.controller;
+&nbsp;
+&nbsp;
+&nbsp;import com.rivin.keypilot_gateway.application.service.ProxyService;
+&nbsp;import jakarta.servlet.http.HttpServletRequest;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;@RestController
+&nbsp;public class ProxyController {
+&nbsp;
+&nbsp;    private final ProxyService proxyService;
+&nbsp;
+&nbsp;    // Provider is hardcoded to &quot;openai&quot; for now.
+&nbsp;    // Lap 5 will make this dynamic via config/request header.
+&nbsp;    private static final String DEFAULT_PROVIDER = &quot;openai&quot;;
+&nbsp;
+<b class="fc">&nbsp;    public ProxyController(ProxyService proxyService) {</b>
+<b class="fc">&nbsp;        this.proxyService = proxyService;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // HttpServletRequest request = This will include URL, header and the method of the request.
+&nbsp;    // String body = This will get the data inside the request, also what we called as Body of a request.
+&nbsp;    //  @RequestMapping(&quot;/**&quot;)  = Catch Everything (Any URL, Any request, any method)
+&nbsp;    @RequestMapping(&quot;/**&quot;)
+&nbsp;    public ResponseEntity&lt;String&gt; proxy(HttpServletRequest request, @RequestBody(required = false) String body) {
+<b class="fc">&nbsp;        return proxyService.forward(DEFAULT_PROVIDER, request, body);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-04-10 20:11</div>
+</div>
+</body>
+</html>
