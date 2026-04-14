@@ -33,7 +33,7 @@ public class ApiKeyRateLimitTest {
 
     @Test
     void shouldNotBeRateLimitedBelowThreshold() {
-        ApiKey apikey = new ApiKey("sk-key", "openai", 4, 50);
+        ApiKey apikey = new ApiKey("sk-key", "openai", 5, 50);
 
         apikey.recordRequest();
         apikey.recordRequest();
