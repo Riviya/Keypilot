@@ -1,6 +1,9 @@
 package com.rivin.keypilot_gateway.application.service;
 
+import com.rivin.keypilot_gateway.application.Exception.ProviderNotFoundException;
 import com.rivin.keypilot_gateway.domain.model.ApiKey;
+import com.rivin.keypilot_gateway.domain.provider.Provider;
+import com.rivin.keypilot_gateway.domain.provider.ProviderRegistry;
 import com.rivin.keypilot_gateway.domain.proxy.ProviderGateway;
 import com.rivin.keypilot_gateway.domain.proxy.ProxyRequest;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,22 +21,29 @@ public class ProxyService {
     private final KeyRotationService keyRotationService;
     private final ProviderGateway providerGateway;
     private final RateLimiterService rateLimiterService;
+    private final ProviderRegistry providerRegistry;
 
-    public ProxyService(KeyRotationService keyRotationService, ProviderGateway providerGateway, RateLimiterService rateLimiterService) {
+    public ProxyService(KeyRotationService keyRotationService, ProviderGateway providerGateway, RateLimiterService rateLimiterService, ProviderRegistry providerRegistry) {
         this.keyRotationService = keyRotationService;
         this.providerGateway = providerGateway;
         this.rateLimiterService = rateLimiterService;
+        this.providerRegistry = providerRegistry;
     }
 
-    public ResponseEntity<String> forward(String provider,
+    public ResponseEntity<String> forward(String providerName,
                                           HttpServletRequest request,
                                           String body) {
 
-        ApiKey selectedKey = keyRotationService.getNextKey(provider);
+        // Resolve provider — throws if not configured
+        Provider provider = providerRegistry.resolve(providerName)
+                .orElseThrow(() -> new ProviderNotFoundException(providerName));
+
+        ApiKey selectedKey = keyRotationService.getNextKey(providerName);
         Map<String, String> headers = extractHeaders(request);
 
         ProxyRequest proxyRequest = new ProxyRequest(
-                provider,
+                providerName,
+                provider.baseUrl(),
                 request.getRequestURI(),
                 HttpMethod.valueOf(request.getMethod()),
                 selectedKey.getKeyValue(),
@@ -65,7 +75,9 @@ public class ProxyService {
         Collections.list(request.getHeaderNames()).forEach(name -> {
             // Never forward the caller's Authorization header
             // The gateway always injects its own managed key
-            if (!name.equalsIgnoreCase("Authorization")) {
+            if (!name.equalsIgnoreCase("Authorization") &&
+                    !name.equalsIgnoreCase("X-Gateway-Provider")
+            ) {
                 headers.put(name, request.getHeader(name));
             }
         });

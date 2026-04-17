@@ -2,6 +2,8 @@ package com.rivin.keypilot_gateway.application.service;
 
 import com.rivin.keypilot_gateway.domain.exception.ProviderCommunicationException;
 import com.rivin.keypilot_gateway.domain.model.ApiKey;
+import com.rivin.keypilot_gateway.domain.provider.Provider;
+import com.rivin.keypilot_gateway.domain.provider.ProviderRegistry;
 import com.rivin.keypilot_gateway.domain.proxy.ProviderGateway;
 import com.rivin.keypilot_gateway.domain.proxy.ProxyRequest;
 import com.rivin.keypilot_gateway.domain.exception.NoAvailableApiKeyException;
@@ -16,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -36,11 +39,26 @@ class ProxyServiceTest {
     @Mock
     private RateLimiterService rateLimiterService;
 
+    @Mock
+    private ProviderRegistry providerRegistry;
+
+    @Mock
+    private Provider provider;
+
     private ProxyService proxyService;
 
     @BeforeEach
     void setUp() {
-        proxyService = new ProxyService(keyRotationService, providerGateway, rateLimiterService);
+        proxyService = new ProxyService(keyRotationService, providerGateway, rateLimiterService, providerRegistry);
+
+        lenient().when(providerRegistry.resolve(any()))
+                .thenReturn(Optional.of(provider));
+
+        lenient().when(provider.baseUrl())
+                .thenReturn("https://api.test.com");
+
+        lenient().when(providerGateway.forward(any()))
+                .thenReturn(ResponseEntity.ok("{}"));
     }
 
     // ---------------------------------------------------------------
@@ -112,7 +130,7 @@ class ProxyServiceTest {
     void shouldPreserveHttpMethodInForwardedRequest() {
 
         // Arrange
-        ApiKey selectedKey = new ApiKey("openai", "sk-test");
+        ApiKey selectedKey = new ApiKey("sk-test", "openai");
         when(keyRotationService.getNextKey("openai")).thenReturn(selectedKey);
         when(httpServletRequest.getRequestURI()).thenReturn("/v1/chat/completions");
         when(httpServletRequest.getMethod()).thenReturn("POST");
