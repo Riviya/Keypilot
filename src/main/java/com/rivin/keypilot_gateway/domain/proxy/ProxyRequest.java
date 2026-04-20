@@ -6,6 +6,7 @@ import java.util.Map;
 
 public record ProxyRequest(
         String provider,
+        String baseUrl,
         String path,
         HttpMethod method,
         String apiKey,

@@ -35,4 +35,7 @@ func init() {
 
 	// Register the "keys" subcommand group
 	rootCmd.AddCommand(keys.NewKeysCmd(&gatewayURL))
+
+	rootCmd.AddCommand(newStatusCmd(&gatewayURL))
+
 }

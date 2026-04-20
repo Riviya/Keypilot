@@ -13,3 +13,17 @@ type ApiKeyResponse struct {
 	Provider string `json:"provider"`
 	Active   bool   `json:"active"`
 }
+
+type ProviderStatus struct {
+	ProviderName   string `json:"providerName"`
+	Available      bool   `json:"available"`
+	TotalKeys      int    `json:"totalKeys"`
+	AvailableKeys  int    `json:"availableKeys"`
+	RateLimitedKeys int   `json:"rateLimitedKeys"`
+	InactiveKeys   int    `json:"inactiveKeys"`
+}
+
+type GatewayStatus struct {
+	Healthy   bool             `json:"healthy"`
+	Providers []ProviderStatus `json:"providers"`
+}

@@ -105,3 +105,19 @@ func (c *GatewayClient) DeleteKey(id string) error {
 
 	return nil
 }
+
+// GetStatus fetches the gateway's live status
+func (c *GatewayClient) GetStatus() (*model.GatewayStatus, error) {
+	resp, err := c.httpClient.Get(c.baseURL + "/api/status")
+	if err != nil {
+		return nil, fmt.Errorf("failed to reach gateway: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var status model.GatewayStatus
+	if err := json.NewDecoder(resp.Body).Decode(&status); err != nil {
+		return nil, fmt.Errorf("failed to parse status response: %w", err)
+	}
+
+	return &status, nil
+}

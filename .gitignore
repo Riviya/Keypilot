@@ -42,3 +42,5 @@ build/
 /cli/*.out
 /cli/__debug_bin
 /cli/vendor/
+
+docker-compose.dev.yml

@@ -133,5 +133,15 @@ public class ApiKey {
     }
 
 
+    /**
+     * Immediately exhausts this key's request window.
+     * Called when the provider explicitly returns 429 for this key.
+     * Forces isRateLimited() to return true until the window resets.
+     */
+    public void forceRateLimit() {
+        requestCount.set(maxRequestsPerWindow);
+    }
+
+
 
 }

@@ -194,3 +194,54 @@ func TestDeleteKey_NotFound(t *testing.T) {
 		t.Fatal("expected error for 404, got nil")
 	}
 }
+
+
+func TestGetStatus_ReturnsHealthyStatus(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/status" {
+			t.Errorf("expected /api/status, got %s", r.URL.Path)
+		}
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(model.GatewayStatus{
+			Healthy: true,
+			Providers: []model.ProviderStatus{
+				{
+					ProviderName:    "openai",
+					Available:       true,
+					TotalKeys:       3,
+					AvailableKeys:   2,
+					RateLimitedKeys: 1,
+					InactiveKeys:    0,
+				},
+			},
+		})
+	}))
+	defer server.Close()
+
+	c := client.NewGatewayClient(server.URL)
+	status, err := c.GetStatus()
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !status.Healthy {
+		t.Error("expected healthy=true")
+	}
+	if len(status.Providers) != 1 {
+		t.Errorf("expected 1 provider, got %d", len(status.Providers))
+	}
+	if status.Providers[0].AvailableKeys != 2 {
+		t.Errorf("expected 2 available keys, got %d", status.Providers[0].AvailableKeys)
+	}
+}
+
+func TestGetStatus_GatewayUnreachable(t *testing.T) {
+	// Point at a port nothing is listening on
+	c := client.NewGatewayClient("http://localhost:19999")
+
+	_, err := c.GetStatus()
+
+	if err == nil {
+		t.Fatal("expected error when gateway unreachable, got nil")
+	}
+}

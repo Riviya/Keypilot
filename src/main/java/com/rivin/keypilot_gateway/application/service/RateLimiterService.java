@@ -40,5 +40,13 @@ public class RateLimiterService {
         return filteredKeys;
     }
 
+    public void markAsRateLimited(String keyId) {
+        ApiKey key = apiKeyRepository.findById(keyId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No API key found with id: " + keyId
+                ));
+        key.forceRateLimit();
+    }
+
 
 }
