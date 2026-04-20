@@ -1,0 +1,20 @@
+# .dockerignore
+.git
+.github
+*.md
+
+# Maven build output (we rebuild inside Docker)
+gateway/target/
+
+# Go build artifacts
+gateway-cli/dist/
+gateway-cli/*.exe
+
+# IDE and OS files
+.idea/
+*.iml
+.DS_Store
+*.log
+
+# Test files don't belong in the image
+gateway/src/test/

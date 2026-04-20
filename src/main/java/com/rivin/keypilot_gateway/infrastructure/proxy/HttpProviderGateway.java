@@ -40,29 +40,26 @@ public class HttpProviderGateway implements ProviderGateway {
                 request.apiKey()
         );
 
-        try {
-            return restClient.method(request.method())
-                    .uri(targetUrl)
-                    .headers(headers -> {
-                        // Auth strategy may set headers (Bearer, ApiKeyHeader)
-                        // or be a no-op (QueryParam)
-                        authStrategy.apply(headers, request.apiKey());
-
-                        // Forward caller's headers (already stripped of Authorization)
-                        request.headers().forEach(headers::add);
-
-                        headers.set("Content-Type", "application/json");
-                    })
-                    .body(request.body() != null ? request.body() : "")
-                    .retrieve()
-                    .toEntity(String.class);
-
-        } catch (RestClientException ex) {
-            throw new ProviderCommunicationException(
-                    "Failed to reach provider [" + request.provider() + "]: "
-                            + ex.getMessage(), ex
-            );
-        }
+        return restClient.method(request.method())
+                .uri(targetUrl)
+                .headers(headers -> {
+                    authStrategy.apply(headers, request.apiKey());
+                    request.headers().forEach(headers::add);
+                    headers.set("Content-Type", "application/json");
+                })
+                .body(request.body() != null ? request.body() : "")
+                .exchange((req, res) -> {
+                    try {
+                        String body = res.bodyTo(String.class);
+                        return ResponseEntity
+                                .status(res.getStatusCode())
+                                .body(body);
+                    } catch (Exception e) {
+                        throw new ProviderCommunicationException(
+                                "Failed to read provider response", e
+                        );
+                    }
+                });
     }
 
     String buildTargetUrl(String baseUrl, String path) {

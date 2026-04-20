@@ -1,0 +1,33 @@
+# docker-compose.yml
+version: "3.9"
+
+services:
+  keypilot:
+    image: riviyaaa/keypilot:latest
+    container_name: keypilot
+    ports:
+      - "4000:4000"
+    volumes:
+      # Mount local config directory into container
+      # Keys added via CLI persist here between container restarts
+      - ~/.keypilot-cli:/config/keys.json
+    environment:
+      # Provider base URLs
+      KEYPILOT_PROVIDERS_OPENAI_BASE_URL: https://api.openai.com
+      KEYPILOT_PROVIDERS_ANTHROPIC_BASE_URL: https://api.anthropic.com
+      KEYPILOT_PROVIDERS_GEMINI_BASE_URL: https://generativelanguage.googleapis.com
+      # Auth types
+      KEYPILOT_PROVIDERS_OPENAI_AUTH_TYPE: BEARER
+      KEYPILOT_PROVIDERS_ANTHROPIC_AUTH_TYPE: BEARER
+      KEYPILOT_PROVIDERS_GEMINI_AUTH_TYPE: QUERY_PARAM
+      KEYPILOT_PROVIDERS_GEMINI_AUTH_PARAM_NAME: key
+      # Default settings
+      KEYPILOT_DEFAULT_PROVIDER: openai
+      KEYPILOT_RETRY_MAX_ATTEMPTS: "3"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:4000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
