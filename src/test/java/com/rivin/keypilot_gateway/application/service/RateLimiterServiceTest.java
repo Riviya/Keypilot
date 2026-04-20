@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
@@ -125,6 +126,26 @@ public class RateLimiterServiceTest {
         assertThat(result).isEqualTo(List.of(apiKey1, apiKey3));
 
 
+    }
+
+    @Test
+    void shouldMarkKeyAsImmediatelyRateLimited() {
+        ApiKey key = new ApiKey("openai", "sk-test", 100, 60);
+        String keyId = key.getId();
+        when(apiKeyRepository.findById(keyId)).thenReturn(java.util.Optional.of(key));
+
+        rateLimiterService.markAsRateLimited(keyId);
+
+        // Key must now report as rate limited regardless of request count
+        assertThat(key.isRateLimited()).isTrue();
+    }
+
+    @Test
+    void shouldThrowWhenMarkingUnknownKeyAsRateLimited() {
+        when(apiKeyRepository.findById("ghost")).thenReturn(java.util.Optional.empty());
+
+        assertThatThrownBy(() -> rateLimiterService.markAsRateLimited("ghost"))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
 

@@ -15,73 +15,45 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+
 @Service
 public class ProxyService {
 
-    private final KeyRotationService keyRotationService;
-    private final ProviderGateway providerGateway;
-    private final RateLimiterService rateLimiterService;
     private final ProviderRegistry providerRegistry;
+    private final RetryHandler retryHandler;
 
-    public ProxyService(KeyRotationService keyRotationService, ProviderGateway providerGateway, RateLimiterService rateLimiterService, ProviderRegistry providerRegistry) {
-        this.keyRotationService = keyRotationService;
-        this.providerGateway = providerGateway;
-        this.rateLimiterService = rateLimiterService;
+    public ProxyService(ProviderRegistry providerRegistry, RetryHandler retryHandler) {
         this.providerRegistry = providerRegistry;
+        this.retryHandler     = retryHandler;
     }
 
-    public ResponseEntity<String> forward(String providerName,
-                                          HttpServletRequest request,
-                                          String body) {
-
-        // Resolve provider — throws if not configured
+    public ResponseEntity<String> forward(String providerName, HttpServletRequest request, String body) {
         Provider provider = providerRegistry.resolve(providerName)
                 .orElseThrow(() -> new ProviderNotFoundException(providerName));
 
-        ApiKey selectedKey = keyRotationService.getNextKey(providerName);
-        Map<String, String> headers = extractHeaders(request);
-
-        ProxyRequest proxyRequest = new ProxyRequest(
+        // Build the base request — apiKey is a placeholder;
+        // RetryHandler will inject the real key per attempt
+        ProxyRequest baseRequest = new ProxyRequest(
                 providerName,
                 provider.baseUrl(),
                 request.getRequestURI(),
                 HttpMethod.valueOf(request.getMethod()),
-                selectedKey.getKeyValue(),
-                headers,
+                "",                         // placeholder — RetryHandler replaces this
+                extractHeaders(request),
                 body
         );
 
-        try {
-            // Forward request
-            ResponseEntity<String> response = providerGateway.forward(proxyRequest);
-
-            // ✅ Record usage ONLY if request reached provider (no exception)
-            rateLimiterService.recordUsage(selectedKey.getId());
-
-            return response;
-
-        } catch (Exception ex) {
-            // ❌ Do NOT record usage if request failed to reach provider
-            throw ex;
-        }
+        return retryHandler.executeWithRetry(providerName, baseRequest);
     }
 
-
-    // Extract and remove Authorization header
     private Map<String, String> extractHeaders(HttpServletRequest request) {
         Map<String, String> headers = new HashMap<>();
-
-
         Collections.list(request.getHeaderNames()).forEach(name -> {
-            // Never forward the caller's Authorization header
-            // The gateway always injects its own managed key
             if (!name.equalsIgnoreCase("Authorization") &&
-                    !name.equalsIgnoreCase("X-Gateway-Provider")
-            ) {
+                    !name.equalsIgnoreCase("X-Gateway-Provider")) {
                 headers.put(name, request.getHeader(name));
             }
         });
-
         return headers;
     }
 }
