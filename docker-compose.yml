@@ -10,7 +10,7 @@ services:
     volumes:
       # Mount local config directory into container
       # Keys added via CLI persist here between container restarts
-      - ~/.keypilot-cli:/config/keys.json
+      - ~/.keypilot-cli:/config
     environment:
       # Provider base URLs
       KEYPILOT_PROVIDERS_OPENAI_BASE_URL: https://api.openai.com
