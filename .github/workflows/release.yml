@@ -2,6 +2,7 @@ name: Release — Build & Push to DockerHub
 
 on:
   push:
+    branches: [ release-test ]
     tags:
       - 'v*.*.*'    # triggers on v1.0.0, v1.2.3, etc.
   workflow_dispatch:
