@@ -2,10 +2,8 @@ name: Release — Build & Push to DockerHub
 
 on:
   push:
-    branches: [ release-test ]
     tags:
       - 'v*.*.*'    # triggers on v1.0.0, v1.2.3, etc.
-  workflow_dispatch:
 
 jobs:
   # ---------------------------------------------------------------
@@ -36,7 +34,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/keypilot-test
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/keypilot
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -79,18 +77,9 @@ jobs:
         with:
           go-version: '1.22'
 
-#      - name: Extract version from tag
-#        id: version
-#        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-      - name: Extract version
+      - name: Extract version from tag
         id: version
-        run: |
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            VERSION="${GITHUB_REF#refs/tags/}"
-          else
-            VERSION="dev-${GITHUB_SHA::7}"
-          fi
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Build CLI for all platforms
         run: |
