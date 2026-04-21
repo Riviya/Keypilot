@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*.*.*'    # triggers on v1.0.0, v1.2.3, etc.
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   # ---------------------------------------------------------------
   # Job 1: Build and push Docker image to DockerHub
