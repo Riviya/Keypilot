@@ -8,7 +8,7 @@ set -euo pipefail
 # ─────────────────────────────────────────────
 
 REPO="riviya/keypilot"
-DOCKER_IMAGE="riviya/keypilot"
+DOCKER_IMAGE="riviyaaa/keypilot"
 INSTALL_DIR="/usr/local/bin"
 BINARY_NAME="keypilot"
 
