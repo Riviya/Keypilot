@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RetryConfig {
 
-    @Value("${gateway.retry.max-attempts:3}")
+    @Value("${keypilot.retry.max-attempts:3}")
     private int maxAttempts;
 
     @Bean

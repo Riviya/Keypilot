@@ -67,10 +67,4 @@ ENV KEYPILOT_DEFAULT_PROVIDER=openai
 ENV KEYPILOT_RETRY_MAX_ATTEMPTS=3
 
 # Entrypoint — runs the JAR with environment-driven config
-ENTRYPOINT ["java", \
-  "-jar", "app.jar", \
-  "--server.port=${SERVER_PORT}", \
-  "--gateway.storage.path=${KEYPILOT_STORAGE_PATH}", \
-  "--gateway.default-provider=${KEYPILOT_DEFAULT_PROVIDER}", \
-  "--gateway.retry.max-attempts=${KEYPILOT_RETRY_MAX_ATTEMPTS}" \
-]
+ENTRYPOINT ["java", "-jar", "app.jar"]

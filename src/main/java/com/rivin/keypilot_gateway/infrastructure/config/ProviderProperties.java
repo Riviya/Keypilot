@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-@ConfigurationProperties(prefix = "gateway")
+@ConfigurationProperties(prefix = "keypilot")
 public class ProviderProperties {
 
     private Map<String, ProviderDefinition> providers = new HashMap<>();
