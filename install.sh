@@ -81,13 +81,31 @@ check_dependencies() {
 install_backend() {
   info "Pulling KeyPilot backend image: ${BOLD}${DOCKER_IMAGE}:${LATEST_VERSION}${NC}"
 
+  # Try versioned image first
   if docker pull "${DOCKER_IMAGE}:${LATEST_VERSION}"; then
-    # Tag it as 'latest' for convenience
+    success "Pulled versioned image: ${LATEST_VERSION}"
+
+    # Always ensure latest tag exists locally
     docker tag "${DOCKER_IMAGE}:${LATEST_VERSION}" "${DOCKER_IMAGE}:latest"
-    success "Backend image pulled and tagged as latest."
-  else
-    error "Failed to pull Docker image. Is Docker running?"
+    success "Tagged image as latest"
+
+    return 0
   fi
+
+  # ── Fallback: try latest tag ───────────────
+  warn "Version ${LATEST_VERSION} not found. Trying :latest..."
+
+  if docker pull "${DOCKER_IMAGE}:latest"; then
+    success "Pulled latest image successfully"
+    return 0
+  fi
+
+  # ── Final failure ───────────────────────────
+  error "Failed to pull KeyPilot Docker image.
+Check:
+- Image name: ${DOCKER_IMAGE}
+- Tags available on DockerHub
+- Docker login (if private repo)"
 }
 
 # ── Download and install CLI binary ──────────
