@@ -108,6 +108,21 @@ Check:
 - Docker login (if private repo)"
 }
 
+start_backend() {
+  info "Starting KeyPilot container..."
+
+  # Stop existing container if running
+  docker rm -f keypilot >/dev/null 2>&1 || true
+
+  docker run -d \
+    --name keypilot \
+    -p 4000:4000 \
+    -v ~/.keypilot-cli:/config/keys.json \
+    "${DOCKER_IMAGE}:latest"
+
+  success "KeyPilot backend started at http://localhost:4000"
+}
+
 # ── Download and install CLI binary ──────────
 install_cli() {
   DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${LATEST_VERSION}/${BINARY_ASSET}"
@@ -169,6 +184,7 @@ main() {
   detect_platform
   get_latest_version
   install_backend
+  start_backend
   install_cli
   windows_note
   verify
