@@ -28,11 +28,11 @@ public abstract class BaseIntegrationTest {
     @DynamicPropertySource
     static void overrideProperties(DynamicPropertyRegistry registry) {
         String baseUrl = wireMockServer.baseUrl();
-        registry.add("gateway.providers.openai.base-url",    () -> baseUrl);
-        registry.add("gateway.providers.anthropic.base-url", () -> baseUrl);
-        registry.add("gateway.providers.gemini.base-url",    () -> baseUrl);
-        registry.add("gateway.storage.path",
+        registry.add("keypilot.providers.openai.base-url",    () -> baseUrl);
+        registry.add("keypilot.providers.anthropic.base-url", () -> baseUrl);
+        registry.add("keypilot.providers.gemini.base-url",    () -> baseUrl);
+        registry.add("keypilot.storage.path",
                 () -> System.getProperty("java.io.tmpdir") + "/gateway-it-keys.json");
-        registry.add("gateway.retry.max-attempts", () -> "3");
+        registry.add("keypilot.retry.max-attempts", () -> "3");
     }
 }

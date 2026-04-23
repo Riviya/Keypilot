@@ -36,9 +36,9 @@ class ProviderRoutingIntegrationTest {
     @DynamicPropertySource
     static void overrideProperties(DynamicPropertyRegistry registry) {
         String baseUrl = wireMockServer.baseUrl();
-        registry.add("gateway.providers.openai.base-url",    () -> baseUrl);
-        registry.add("gateway.providers.anthropic.base-url", () -> baseUrl);
-        registry.add("gateway.storage.path",
+        registry.add("keypilot.providers.openai.base-url",    () -> baseUrl);
+        registry.add("keypilot.providers.anthropic.base-url", () -> baseUrl);
+        registry.add("keypilot.storage.path",
                 () -> System.getProperty("java.io.tmpdir") + "/gateway-routing-test.json");
     }
 
