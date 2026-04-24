@@ -11,8 +11,15 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "keypilot")
 public class ProviderProperties {
 
+
+
     private Map<String, ProviderDefinition> providers = new HashMap<>();
     private String defaultProvider = "openai";
+
+    // ✅ Add this constructor to ensure binding works
+    public ProviderProperties() {
+        // Default constructor for Spring binding
+    }
 
     public Map<String, ProviderDefinition> getProviders() {
         return providers;
