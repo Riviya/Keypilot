@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-@Component
 @ConfigurationProperties(prefix = "keypilot")
 public class ProviderProperties {
 
