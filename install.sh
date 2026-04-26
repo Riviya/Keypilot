@@ -79,21 +79,23 @@ check_dependencies() {
 
 # ── Pull Docker image (backend) ───────────────
 install_backend() {
-  info "Pulling KeyPilot backend image: ${BOLD}${DOCKER_IMAGE}:${LATEST_VERSION}${NC}"
+  DOCKER_VERSION="${LATEST_VERSION#v}"  # strip "v" prefix: v1.0.1 → 1.0.1
+
+  info "Pulling KeyPilot backend image: ${BOLD}${DOCKER_IMAGE}:${DOCKER_VERSION}${NC}"
 
   # Try versioned image first
-  if docker pull "${DOCKER_IMAGE}:${LATEST_VERSION}"; then
-    success "Pulled versioned image: ${LATEST_VERSION}"
+  if docker pull "${DOCKER_IMAGE}:${DOCKER_VERSION}"; then
+    success "Pulled versioned image: ${DOCKER_VERSION}"
 
     # Always ensure latest tag exists locally
-    docker tag "${DOCKER_IMAGE}:${LATEST_VERSION}" "${DOCKER_IMAGE}:latest"
+    docker tag "${DOCKER_IMAGE}:${DOCKER_VERSION}" "${DOCKER_IMAGE}:latest"
     success "Tagged image as latest"
 
     return 0
   fi
 
   # ── Fallback: try latest tag ───────────────
-  warn "Version ${LATEST_VERSION} not found. Trying :latest..."
+  warn "Version ${DOCKER_VERSION} not found. Trying :latest..."
 
   if docker pull "${DOCKER_IMAGE}:latest"; then
     success "Pulled latest image successfully"
@@ -115,6 +117,7 @@ start_backend() {
     mkdir -p ~/.keypilot-cli
     [ -f ~/.keypilot-cli/keys.json ] || echo '{}' > ~/.keypilot-cli/keys.json
 
+    chmod 666 ~/.keypilot-cli/keys.json
 
   # Stop existing container if running
   docker rm -f keypilot >/dev/null 2>&1 || true
