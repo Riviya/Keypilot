@@ -111,13 +111,18 @@ Check:
 start_backend() {
   info "Starting KeyPilot container..."
 
+  # Create the config directory and seed an empty keys file if missing
+    mkdir -p ~/.keypilot-cli
+    [ -f ~/.keypilot-cli/keys.json ] || echo '{}' > ~/.keypilot-cli/keys.json
+
+
   # Stop existing container if running
   docker rm -f keypilot >/dev/null 2>&1 || true
 
   docker run -d \
     --name keypilot \
     -p 4000:4000 \
-    -v ~/.keypilot-cli:/config/keys.json \
+    -v ~/.keypilot-cli/keys.json:/config/keys.json \  # mount the FILE, not the dir
     "${DOCKER_IMAGE}:latest"
 
   success "KeyPilot backend started at http://localhost:4000"

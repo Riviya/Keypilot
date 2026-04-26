@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Primary;
 @Configuration
 public class PersistenceConfig {
 
-    @Value("${keypilot.storage.path:${user.home}/.cli/keys.json}")
+    @Value("${keypilot.storage.path:${user.home}/.keypilot-cli/keys.json}")
     private String storagePath;
 
     @Bean
