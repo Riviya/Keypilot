@@ -122,7 +122,7 @@ start_backend() {
   docker run -d \
     --name keypilot \
     -p 4000:4000 \
-    -v ~/.keypilot-cli/keys.json:/config/keys.json \  # mount the FILE, not the dir
+    -v ~/.keypilot-cli/keys.json:/config/keys.json \
     "${DOCKER_IMAGE}:latest"
 
   success "KeyPilot backend started at http://localhost:4000"
